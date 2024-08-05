@@ -72,22 +72,37 @@ Agent::Action MyAI::getAction( int number )
 		for (int i = 0; i < rowDimension; ++i) {
 			for (int j = 0; j < colDimension; ++j) {
 				if (board[ i ][ j ] == 1) {
-					if (i > 0 && j < colDimension - 1 && board[ i - 1 ][ j - 1 ] != -2 && board[ i - 1 ][ j ] != -2 && board[ i - 1 ][ j + 1 ] == -2 && board[ i ][ j - 1 ] != -2 && board[ i ][ j + 1 ] != -2 &&  board[ i + 1 ][ j - 1 ] != -2 &&  board[ i ][ j ] != -2 && board[ i + 1 ][ j + 1 ] != -2) {
-							agentX = i -1; agentY = j + 1;
-					return {FLAG, i - 1, j + 1};
+					int coveredNeighbors = 0;
+                	int flagX = -1, flagY = -1;
+
+                	if (i > 0 && j > 0 && board[i - 1][j - 1] == -2) {
+						coveredNeighbors++; flagX = i - 1; flagY = j - 1; 
 					}
-					else if (i > 0 && j > 0 && board[ i - 1 ][ j - 1 ] == -2 && board[ i - 1 ][ j ] != -2 && board[ i - 1 ][ j + 1 ] != -2 && board[ i ][ j - 1 ] != -2 && board[ i ][ j + 1 ] != -2 &&  board[ i + 1 ][ j - 1 ] != -2 &&  board[ i ][ j ] != -2 && board[ i + 1 ][ j + 1 ] != -2) {
-							agentX = i - 1; agentY = j - 1;
-return {FLAG, i - 1, j - 1};
+                	if (i > 0 && board[i - 1][j] == -2) {
+						coveredNeighbors++; flagX = i - 1; flagY = j;
 					}
-					else if (i < rowDimension - 1 && j < colDimension - 1 && board[ i - 1 ][ j - 1 ] != -2 && board[ i - 1 ][ j ] != -2 && board[ i - 1 ][ j + 1 ] != -2 && board[ i ][ j - 1 ] != -2 && board[ i ][ j + 1 ] != -2 &&  board[ i + 1 ][ j - 1 ] != -2 &&  board[ i ][ j ] != -2 && board[ i + 1 ][ j + 1 ] == -2) {
-							agentX = i + 1; agentY = j + 1;
-return {FLAG, i + 1, j + 1};
+               		if (i > 0 && j < colDimension - 1 && board[i - 1][j + 1] == -2) {
+						coveredNeighbors++; flagX = i - 1; flagY = j + 1; 
 					}
-					else if (i < rowDimension && j > 0 && board[ i - 1 ][ j - 1 ] != -2 && board[ i - 1 ][ j ] != -2 && board[ i - 1 ][ j + 1 ] != -2 && board[ i ][ j - 1 ] != -2 && board[ i ][ j + 1 ] != -2 &&  board[ i + 1 ][ j - 1 ] == -2 &&  board[ i ][ j ] != -2 && board[ i + 1 ][ j + 1 ] != -2) {
-							agentX = i + 1; agentY = j - 1;
-							return {FLAG, i + 1, j - 1};
-						}
+                	if (j > 0 && board[i][j - 1] == -2) {
+						coveredNeighbors++; flagX = i; flagY = j - 1; 
+					}
+                	if (j < colDimension - 1 && board[i][j + 1] == -2) { 
+						coveredNeighbors++; flagX = i; flagY = j + 1; 
+					}
+                	if (i < rowDimension - 1 && j > 0 && board[i + 1][j - 1] == -2) { 
+						coveredNeighbors++; flagX = i + 1; flagY = j - 1; 
+					}
+                	if (i < rowDimension - 1 && board[i + 1][j] == -2) {
+						coveredNeighbors++; flagX = i + 1; flagY = j; 
+					}
+                	if (i < rowDimension - 1 && j < colDimension - 1 && board[i + 1][j + 1] == -2) {
+						coveredNeighbors++; flagX = i + 1; flagY = j + 1; 
+					}
+                	if (coveredNeighbors == 1) {
+                   		agentX = flagX; agentY = flagY;
+                    	return {FLAG, flagX, flagY};
+                	}
 				}
 			}
 		}

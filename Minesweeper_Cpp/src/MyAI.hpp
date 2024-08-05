@@ -31,6 +31,14 @@ using namespace std;
 
 class MyAI : public Agent
 {
+private:
+	std::vector<std::vector<int>> board;
+	int rowDimension;
+	int colDimension;
+	int totalMines;
+	int agentX;
+	int agentY;
+
 public:
     MyAI ( int _rowDimension, int _colDimension, int _totalMines, int _agentX, int _agentY );
 

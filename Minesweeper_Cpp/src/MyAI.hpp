@@ -49,8 +49,12 @@ public:
     // YOUR CODE BEGINS
     // ======================================================================
 
-
-
+	Action uncoverAdjacentZero();
+	Action flagAdjacentOne();
+	std::vector<int> getAdjacentCells(int x, int y);
+	Action uncoverRemainingCells();
+	bool isUncovered(int number);
+	void printBoard();
     // ======================================================================
     // YOUR CODE ENDS
     // ======================================================================

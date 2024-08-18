@@ -53,6 +53,13 @@ public:
 	Action flagAdjacentOne();
 	std::vector<int> getAdjacentCells(int x, int y);
 	Action uncoverRemainingCells();
+	Action checkOneOneEdgePattern();
+	Action educatedGuess();
+	Action handle121Pattern();
+	Action handle1221Pattern();
+	Action handle11Pattern();
+	Action uncoverRemainingAdjacent();
+	double calculateMineProbability(int x, int y);
 	bool isUncovered(int number);
 	void printBoard();
     // ======================================================================

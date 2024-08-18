@@ -18,14 +18,14 @@
 // ======================================================================
 
 #include "MyAI.hpp"
+#include <cassert>
 
 MyAI::MyAI ( int _rowDimension, int _colDimension, int _totalMines, int _agentX, int _agentY ) : Agent(), rowDimension(_rowDimension), colDimension(_colDimension), totalMines(_totalMines), agentX(_agentX), agentY(_agentY) {
 
 	// Initialize Board based on row and col with value -2 and the initial X, Y value
-	board = std::vector<std::vector<int>>(_rowDimension, std::vector<int>(_colDimension, -2));
+	board = std::vector<std::vector<int>>(_colDimension, std::vector<int>(_rowDimension, -2));
 	board[_agentX][_agentY] = 0;
 };
-
 
 Agent::Action MyAI::getAction( int number )
 {
@@ -52,11 +52,55 @@ Agent::Action MyAI::getAction( int number )
 		return flagAction;
 	}
 	
+	// cout << "Here?" << endl;
+
+	//Check if the value is equal to the number of flags in adjacent cells
+	Action uncoverAdjacentFlag = uncoverRemainingAdjacent();
+	if (uncoverAdjacentFlag.action != LEAVE) {
+		//debug
+        // cout << "Maybe here" << endl;
+
+		return uncoverAdjacentFlag;
+	}
+
+	//Check one edge pattern
+	Action onePattern = checkOneOneEdgePattern();
+	if (onePattern.action != LEAVE) {
+		return onePattern;
+	}
+
+	// 121 pattern
+	Action handle121 = handle121Pattern();
+	if (handle121.action != LEAVE) {
+		totalMines = totalMines - 1;		
+		return handle121;
+	}
+
+	// 1221 pattern
+	Action handle1221 = handle1221Pattern();
+	if (handle1221.action != LEAVE) {
+		totalMines = totalMines - 1;
+		return handle1221;
+	}
+
+	// 11 pattern
+	Action handle11 = handle11Pattern();
+	if (handle11.action != LEAVE) {
+		//debug
+		cout << "pattern 11 executed" << endl;
+		totalMines = totalMines - 1;
+		return handle11;
+	}
+
 	if (totalMines == 0) {
 		Action uncoverRemaining = uncoverRemainingCells();
 		return uncoverRemaining;
 	}
 
+	Action guessAction = educatedGuess();
+	if(guessAction.action != LEAVE){
+		return guessAction;
+	}
 	return {LEAVE, -1, -1};
 }
 
@@ -113,10 +157,10 @@ Agent::Action MyAI::flagAdjacentOne() {
 				std::vector<int> adjValues = getAdjacentCells(i, j);
 			
 				//for debugging
-				for (int k = 0; k < adjValues.size(); ++k) {
-					std::cout << adjValues[k] << " ";
-				}
-				std::cout << std::endl;
+				// for (int k = 0; k < adjValues.size(); ++k) {
+				//	std::cout << adjValues[k] << " ";
+				//}
+				//std::cout << std::endl;
 
                 // Check top-left
                 if (isUncovered(adjValues[0]) && isUncovered(adjValues[1]) && adjValues[2] == -2 &&
@@ -151,6 +195,341 @@ Agent::Action MyAI::flagAdjacentOne() {
 	}
 	return {LEAVE, -1, -1};
 }
+
+//Uncover when value = number of flags in adjacent cells
+Agent::Action MyAI::uncoverRemainingAdjacent() {
+	for (int i = 0; i < rowDimension - 1; ++i) {
+		for (int j = 0; j < colDimension - 1; ++j) {
+			if (board[i][j] != 0) {
+				std::vector<int> adjCells = getAdjacentCells(i, j);
+				int flagcount = 0;
+				int coveredcount = 0;
+			
+				//Debug
+				//cout << "Seg fault Here?" << endl;
+
+				for (int k = 0; k < adjCells.size(); ++k) {
+					if (adjCells[k] == -1) {
+						++flagcount;
+					}
+					else if (adjCells[k] == -2) {
+						++coveredcount;
+					}
+				}
+			
+				if (board[i][j] == flagcount) {
+					//Debug 
+					// cout << board[i][j] << " is equal to " << count << " i " << i << " j " << j << endl;
+
+					if (i > 0 && j > 0 && board[ i - 1 ] [ j - 1 ] == -2) {
+						agentX = i - 1; agentY = j - 1;
+						return {UNCOVER, i - 1, j - 1};
+					} else if (i > 0 && board[ i - 1 ][ j ] == -2) {	// Top Middle 
+						agentX = i - 1; agentY = j;
+						return {UNCOVER, i - 1, j};
+					} else if (i > 0 && j < colDimension - 1 && board[ i - 1 ][ j + 1 ] == -2) {	// Top Right 
+						agentX = i - 1; agentY = j + 1;
+						return {UNCOVER, i - 1, j + 1};
+					} else if (j > 0 && board[ i ][ j - 1 ] == -2) {	// Middle Left
+						agentX = i; agentY = j - 1;
+						return {UNCOVER, i, j - 1};
+					} else if (j < colDimension - 1 && board[ i ][ j + 1 ] == -2) {
+						agentX = i; agentY = j + 1;
+						return {UNCOVER, i, j + 1};
+					} else if (i < rowDimension - 1 && j > 0 && board[ i + 1 ][ j - 1 ] == -2) {
+						agentX = i + 1; agentY = j - 1;
+						return {UNCOVER, i + 1, j - 1};
+					} else if (i < rowDimension - 1 && board[ i + 1 ][ j ] == -2) {	// Bottom Middle
+						agentX = i + 1; agentY = j;
+						return {UNCOVER, i + 1, j};
+					} else if (i < rowDimension - 1 && j < colDimension - 1 && board[ i + 1 ][ j + 1] == -2) {	// Bottom Right
+						agentX = i + 1; agentY = j + 1;
+						return {UNCOVER, i + 1, j + 1};
+					}
+				}
+				else if (board[i][j] == flagcount + coveredcount) {
+					if (i > 0 && j > 0 && board[ i - 1 ] [ j - 1 ] == -2) {
+						agentX = i - 1; agentY = j - 1;
+						return {FLAG, i - 1, j - 1};
+					} else if (i > 0 && board[ i - 1 ][ j ] == -2) {	// Top Middle 
+						agentX = i - 1; agentY = j;
+						return {FLAG, i - 1, j};
+					} else if (i > 0 && j < colDimension - 1 && board[ i - 1 ][ j + 1 ] == -2) {	// Top Right 
+						agentX = i - 1; agentY = j + 1;
+						return {FLAG, i - 1, j + 1};
+					} else if (j > 0 && board[ i ][ j - 1 ] == -2) {	// Middle Left
+						agentX = i; agentY = j - 1;
+						return {FLAG, i, j - 1};
+					} else if (j < colDimension - 1 && board[ i ][ j + 1 ] == -2) {
+						agentX = i; agentY = j + 1;
+						return {FLAG, i, j + 1};
+					} else if (i < rowDimension - 1 && j > 0 && board[ i + 1 ][ j - 1 ] == -2) {
+						agentX = i + 1; agentY = j - 1;
+						return {FLAG, i + 1, j - 1};
+					} else if (i < rowDimension - 1 && board[ i + 1 ][ j ] == -2) {	// Bottom Middle
+						agentX = i + 1; agentY = j;
+						return {FLAG, i + 1, j};
+					} else if (i < rowDimension - 1 && j < colDimension - 1 && board[ i + 1 ][ j + 1] == -2) {	// Bottom Right
+						agentX = i + 1; agentY = j + 1;
+						return {FLAG, i + 1, j + 1};
+					}
+				}
+			}
+		}
+	}
+	return {LEAVE, -1, -1};
+}
+
+Agent::Action MyAI::checkOneOneEdgePattern() {
+    // Check top edge
+    for (int j = 0; j < colDimension - 1; ++j) {
+        if (board[0][j] == 1 && board[0][j + 1] == 1) {
+            if (board[1][j] == -2) {
+                agentX = 1;
+                agentY = j;
+                return {UNCOVER, 1, j};
+            }
+            if (board[1][j + 1] == -2) {
+                agentX = 1;
+                agentY = j + 1;
+                return {UNCOVER, 1, j + 1};
+            }
+        }
+    }
+
+    // Check bottom edge
+    for (int j = 0; j < colDimension - 1; ++j) {
+        if (board[rowDimension - 1][j] == 1 && board[rowDimension - 1][j + 1] == 1) {
+            if (board[rowDimension - 2][j] == -2) {
+                agentX = rowDimension - 2;
+                agentY = j;
+                return {UNCOVER, rowDimension - 2, j};
+            }
+            if (board[rowDimension - 2][j + 1] == -2) {
+                agentX = rowDimension - 2;
+                agentY = j + 1;
+                return {UNCOVER, rowDimension - 2, j + 1};
+            }
+        }
+    }
+// Check left edge
+    for (int i = 0; i < rowDimension - 1; ++i) {
+        if (board[i][0] == 1 && board[i + 1][0] == 1) {
+            if (board[i][1] == -2) {
+                agentX = i;
+                agentY = 1;
+                return {UNCOVER, i, 1};
+            }
+            if (board[i + 1][1] == -2) {
+                agentX = i + 1;
+                agentY = 1;
+                return {UNCOVER, i + 1, 1};
+            }
+        }
+    }
+
+    // Check right edge
+    for (int i = 0; i < rowDimension - 1; ++i) {
+        if (board[i][colDimension - 1] == 1 && board[i + 1][colDimension - 1] == 1) {
+            if (board[i][colDimension - 2] == -2) {
+                agentX = i;
+                agentY = colDimension - 2;
+                return {UNCOVER, i, colDimension - 2};
+            }
+            if (board[i + 1][colDimension - 2] == -2) {
+                agentX = i + 1;
+                agentY = colDimension - 2;
+                return {UNCOVER, i + 1, colDimension - 2};
+            }
+        }
+    }
+
+    return {LEAVE, -1, -1};
+}
+
+Agent::Action MyAI::handle121Pattern() {
+    for (int i = 1; i < rowDimension - 1; ++i) {
+        for (int j = 1; j < colDimension - 1; ++j) {
+            // Checking horizontally for the pattern
+            if (board[i][j-1] == 1 && board[i][j] == 2 && board[i][j+1] == 1) {
+				if (isUncovered(board[i+1][j-1]) && isUncovered(board[i+1][j+1])) {
+					if (board[i-1][j-1] == -2) {
+						agentX = i - 1; agentY = j - 1;
+						return {FLAG, i - 1, j - 1};
+					}
+					else if (board[i-1][j-1] == -1 && board[i-1][j+1] == -2) {
+						agentX = i - 1; agentY = j + 1;
+						return {FLAG, i - 1, j + 1};
+					}
+				}
+				else if (isUncovered(board[i-1][j-1]) && isUncovered(board[i-1][j+1])) {
+					if (board[i+1][j-1] == -2) {
+						agentX = i + 1; agentY = j - 1;
+						return {FLAG, i + 1, j - 1};
+					}
+					else if (board[i+1][j-1] == -1 && board[i+1][j+1] == -2) {
+						agentX = i + 1; agentY = j + 1;
+						return {FLAG, i + 1, j + 1};
+					}
+				}
+			}
+			// Checking vertically for the pattern
+			else if (board[i-1][j] == 1 && board[i][j] == 2 && board[i+1][j] == 1) {
+				if (isUncovered(board[i-1][j-1]) && isUncovered(board[i+1][j-1])) {
+					if (board[i-1][j+1] == -2) {
+						agentX = i - 1; agentY = j + 1;
+						return {FLAG, i - 1, j + 1};
+					}
+					else if (board[i-1][j+1] == -1 && board[i+1][j+1] == -2) {
+						agentX = i + 1; agentY = j + 1;
+						return {FLAG, i + 1, j + 1};
+					}
+				}
+				else if (isUncovered(board[i-1][j+1]) && isUncovered(board[i+1][j+1])) {
+					if (board[i-1][j-1] == -2) {
+						agentX = i - 1; agentY = j - 1;
+						return {FLAG, i - 1, j - 1};
+					}
+					else if (board[i-1][j-1] == -1 && board[i+1][j-1] == -2) {
+						agentX = i + 1; agentY = j - 1;
+						return {FLAG, i + 1, j - 1};
+					}
+				}
+			}
+		}
+	}
+    return {LEAVE, -1, -1};
+}
+
+//Handle 1221 pattern
+Agent::Action MyAI::handle1221Pattern() {
+	for (int i = 1; i < rowDimension - 2; ++i) {
+		for (int j = 1; j < colDimension - 2; ++j) {
+			if (board[i][j-1] == 1 && board[i][j] == 2 && board[i][j+1] == 2 && board[i][j+2] == 1) {
+				
+				//Debug
+				//cout << "1221 PATTERN" << endl;
+
+				if (isUncovered(board[i-1][j]) && isUncovered(board[i-1][j+1])) {
+					if (board[i+1][j] == -2) {
+						agentX = i + 1; agentY = j;
+						return {FLAG, i + 1, j};
+					}
+					else if (board[i+1][j] == -1 && board[i+1][j+1] == -2) {
+						agentX = i + 1; agentY = j + 1;
+						return {FLAG, i + 1, j + 1};
+					}
+				}
+				else if (isUncovered(board[i+1][j]) && isUncovered(board[i+1][j+1])) {
+					if (board[i-1][j] == -2) {
+						agentX = i - 1; agentY = j;
+						return {FLAG, i - 1, j};
+					}
+					else if (board[i-1][j] == -1 && board[i-1][j+1] == -2) {
+						agentX = i - 1; agentY = j + 1;
+						return {FLAG, i - 1, j + 1};
+					}
+				}
+			}
+			else if (board[i-1][j] == 1 && board[i][j] == 2 && board[i+1][j] == 2 && board[i+2][j] == 1) {
+				
+				//Debug
+				//cout << "1221 PATTERN V" << endl;
+
+				if (isUncovered(board[i][j+1]) && isUncovered(board[i+1][j+1])) {
+					if (board[i][j-1] == -2) {
+						agentX = i; agentY = j - 1;
+						return {FLAG, i, j - 1};
+					}
+					else if (board[i][j-1] == -1 && board[i+1][j-1] == -2) {
+						agentX = i + 1; agentY = j - 1;
+						return {FLAG, i + 1, j - 1};
+					}
+				}
+				else if (isUncovered(board[i][j-1]) && isUncovered(board[i+1][j-1])) {
+					if (board[i][j+1] == -2) {
+						agentX = i; agentY = j + 1;
+						return {FLAG, i, j + 1};
+					}
+					else if (board[i][j+1] == -1 && board[i+1][j+1] == -2) {
+						agentX = i + 1; agentY = j + 1;
+						return {FLAG, i + 1, j + 1};
+					}
+				}
+			}
+		}
+	}
+	return {LEAVE, -1, -1};
+}
+
+//Handle pattern for 11
+Agent::Action MyAI::handle11Pattern() {
+	for (int i = 1; i < rowDimension - 1; ++i) {
+		for (int j = 1; j < colDimension - 1; ++j) {
+			if (board[i][j] == 1) {
+				if (board[i][j-1] == 1) {
+					if (isUncovered(board[i+1][j-1]) && isUncovered(board[i+1][j]) && isUncovered(board[i+1][j+1])) {
+						if (board[i-1][j+1] == -2) {
+							agentX = i - 1; agentY = j + 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+					else if (isUncovered(board[i-1][j-1]) && isUncovered(board[i-1][j]) && isUncovered(board[i-1][j+1])) {
+						if (board[i+1][j+1] == -2) {
+							agentX = i + 1; agentY = j + 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+				}
+				else if (board[i][j+1] == 1) {
+					if (isUncovered(board[i+1][j-1]) && isUncovered(board[i+1][j]) && isUncovered(board[i+1][j+1])) {
+						if (board[i-1][j-1] == -2) {
+							agentX = i - 1; agentY = j - 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+					else if (isUncovered(board[i-1][j-1]) && isUncovered(board[i-1][j]) && isUncovered(board[i-1][j+1])) {
+						if (board[i+1][j-1] == -2) {
+							agentX = i + 1; agentY = j - 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+				}
+				else if (board[i-1][j] == 1) {
+					if (isUncovered(board[i-1][j+1]) && isUncovered(board[i][j+1]) && isUncovered(board[i+1][j+1])) {
+						if (board[i+1][j-1] == -2) {
+							agentX = i + 1; agentY = j - 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+					else if (isUncovered(board[i-1][j-1]) && isUncovered(board[i][j-1]) && isUncovered(board[i+1][j-1])) {
+						if (board[i+1][j+1] == -2) {
+							agentX = i + 1; agentY = j + 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+				}
+				else if (board[i+1][j] == 1) {
+					if (isUncovered(board[i-1][j+1]) && isUncovered(board[i][j+1]) && isUncovered(board[i+1][j+1])) {
+						if (board[i-1][j-1] == -2) {
+							agentX = i - 1; agentY = j - 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+					else if (isUncovered(board[i-1][j-1]) && isUncovered(board[i][j-1]) && isUncovered(board[i+1][j-1])) {
+						if (board[i-1][j+1] == -2) {
+							agentX = i - 1; agentY = j + 1;
+							return {UNCOVER, agentX, agentY};
+						}
+					}
+				}
+			}
+		}
+	}
+	return {LEAVE, -1, -1};
+}
+
+
 
 // Returns a container with all of the adjacent cells 
 // Values that goes out of bound is set to -3
@@ -187,6 +566,59 @@ Agent::Action MyAI::uncoverRemainingCells() {
 	return {LEAVE, -1, -1};
 }
 
+
+Agent::Action MyAI::educatedGuess() {
+    double minProbability = 1.0;
+    int bestX = -1;
+    int bestY = -1;
+
+    for (int i = 0; i < rowDimension; ++i) {
+        for (int j = 0; j < colDimension; ++j) {
+            if (board[i][j] == -2) { // check only uncovered cells
+                double probability = calculateMineProbability(i, j);
+                //find lowest probability
+                if (probability < minProbability) {
+                    minProbability = probability;
+                    bestX = i;
+                    bestY = j;
+                }
+            }
+        }
+    }
+    if (bestX != -1 && bestY != -1) {
+        agentX = bestX;
+        agentY = bestY;
+        return {UNCOVER, bestX, bestY};
+    }
+
+    return {LEAVE, -1, -1};
+}
+
+double MyAI::calculateMineProbability(int x, int y) {
+    int mineCount = 0; // # of potential mines
+    int unknownCount = 0; // # of unknown cells
+
+    // Loop through adjacent cells to count mines and unknowns 
+    for (int i = -1; i <= 1; ++i) {
+        for (int j = -1; j <= 1; ++j) {
+            int adjX = x + i;
+            int adjY = y + j;
+
+			//bound check - calculate mine and unkown counts 
+            if (adjX >= 0 && adjX < rowDimension && adjY >= 0 && adjY < colDimension) {
+                if (board[adjX][adjY] > 0) { 
+                    mineCount += board[adjX][adjY];
+                } else if (board[adjX][adjY] == -2) { 
+                    unknownCount++;
+                }
+            }
+        }
+    }
+	//probablity of a cell being a mine 
+    return (double)mineCount / unknownCount;
+}
+
+
 // Returns whether the cell is uncovered or not 
 bool MyAI::isUncovered(int number) {
 	if (number == -1 || number == -2 || number == -3) {
@@ -216,3 +648,6 @@ void MyAI::printBoard() {
 // ======================================================================
 // YOUR CODE ENDS
 // ======================================================================
+
+
+

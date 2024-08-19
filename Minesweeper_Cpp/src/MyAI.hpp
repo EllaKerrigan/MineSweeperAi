@@ -58,6 +58,9 @@ public:
 	Action handle121Pattern();
 	Action handle1221Pattern();
 	Action handle11Pattern();
+	Action handle12PlusPattern();
+	Action handle11PlusPattern();
+	Action handle12CPattern();
 	Action uncoverRemainingAdjacent();
 	double calculateMineProbability(int x, int y);
 	bool isUncovered(int number);

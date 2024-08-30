@@ -64,7 +64,9 @@ public:
 	Action uncoverRemainingAdjacent();
 	double calculateMineProbability(int x, int y);
 	bool isUncovered(int number);
+	bool isValidCell(int x, int y);
 	void printBoard();
+	
     // ======================================================================
     // YOUR CODE ENDS
     // ======================================================================

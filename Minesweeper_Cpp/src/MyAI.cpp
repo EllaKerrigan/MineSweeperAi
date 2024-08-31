@@ -61,6 +61,7 @@ Agent::Action MyAI::getAction( int number )
 		//debug
         // cout << "Maybe here" << endl;
 
+
 		return uncoverAdjacentFlag;
 	}
 

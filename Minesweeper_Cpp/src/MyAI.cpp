@@ -1,3 +1,4 @@
+
 // // ======================================================================
 // // FILE:        MyAI.cpp
 // //
@@ -39,23 +40,23 @@
 // 	// 					FOR DEBUG
 // 	//printBoard();
 
-// 	// Check if there are any 0’s on the board where the adjacent values aren’t uncovered yet
+// // 	// Check if there are any 0’s on the board where the adjacent values aren’t uncovered yet
 // 	Action uncoverAction = uncoverAdjacentZero();
 // 	if (uncoverAction.action != LEAVE) {
 // 		return uncoverAction;
 // 	}
 
-// 	//Check if there is a cell with value 1 and only one adjacent cell that isn’t uncovered
+// // 	//Check if there is a cell with value 1 and only one adjacent cell that isn’t uncovered
 // 	Action flagAction = flagAdjacentOne();
 // 	if (flagAction.action != LEAVE) {
 // 		totalMines = totalMines - 1;
 // 		return flagAction;
 // 	}
 	
-// 	// cout << "Here?" << endl;
+// // 	// cout << "Here?" << endl;
 
-// 	//Check if the value is equal to the number of flags in adjacent cells
-// 	Action uncoverAdjacentFlag = uncoverRemainingCells();
+// // 	//Check if the value is equal to the number of flags in adjacent cells
+// 	Action uncoverAdjacentFlag = uncoverRemainingAdjacent();
 // 	if (uncoverAdjacentFlag.action != LEAVE) {
 // 		//debug
 //         // cout << "Maybe here" << endl;
@@ -98,7 +99,7 @@
 // 		totalMines = totalMines - 1;
 // 		return handle12Plus;
 // 	}
-
+	
 // 	// 11 plus pattern
 // 	Action handle11Plus = handle11PlusPattern();
 // 	if (handle11Plus.action != LEAVE) {
@@ -126,16 +127,16 @@
 // 	return {LEAVE, -1, -1};
 // }
 
-//     // ======================================================================
-//     // YOUR CODE ENDS
-//     // ======================================================================
+// //     // ======================================================================
+// //     // YOUR CODE ENDS
+// //     // ======================================================================
 
 
 
 
-// // ======================================================================
-// // YOUR CODE BEGINS
-// // ======================================================================
+// // // ======================================================================
+// // // YOUR CODE BEGINS
+// // // ======================================================================
 
 // Agent::Action MyAI::uncoverAdjacentZero() {
 // 	for (int i = 0; i < rowDimension; ++i) {
@@ -691,6 +692,7 @@
 //     return {LEAVE, -1, -1};
 // }
 
+
 // Agent::Action MyAI::handle11PlusPattern() {
 //     for (int i = 1; i < rowDimension - 2; ++i) {
 //         for (int j = 1; j < colDimension - 2; ++j) {
@@ -786,52 +788,19 @@
 // 	}
 // 	return {LEAVE, -1, -1};
 // }
+// 	bool MyAI::isValidCell(int x, int y){
+//     return (x >= 0 && x < rowDimension && y >= 0 && y < colDimension);
+// 	}
 
-
-// // Agent::Action MyAI::educatedGuess() {
-// //     double minProbability = 1.0;
-// //     int bestX = -1;
-// //     int bestY = -1;
-
-// //     for (int i = 0; i < rowDimension; ++i) {
-// //         for (int j = 0; j < colDimension; ++j) {
-// //             if (board[i][j] == -2) { // check only uncovered cells
-// //                 double probability = calculateMineProbability(i, j);
-// //                 //find lowest probability
-// //                 if (probability < minProbability) {
-// //                     minProbability = probability;
-// //                     bestX = i;
-// //                     bestY = j;
-// //                 }
-// //             }
-// //         }
-// //     }
-// //     if (bestX != -1 && bestY != -1) {
-// //         agentX = bestX;
-// //         agentY = bestY;
-// //         return {UNCOVER, bestX, bestY};
-// //     }
-
-// // 	for (int i = 0; i < rowDimension - 1; ++i) {
-// // 		for (int j = 0; j < colDimension - 1; ++j) {
-// // 			if (board[i][j] == -2) {
-// // 				return {UNCOVER, i, j};
-// // 			}
-// // 		}
-// // 	}
-
-// //     return {LEAVE, -1, -1};
 // Agent::Action MyAI::educatedGuess() {
 //     double minRisk = 1.0;
 //     int guessX = -1, guessY = -1;
 
-//     // Loop through the board to find the cell with the minimum mine probability
+//     // Find the cell with the minimum mine probability
 //     for (int i = 0; i < rowDimension; ++i) {
 //         for (int j = 0; j < colDimension; ++j) {
-//             if (board[i][j] == -2) {  // Only consider covered cells
+//             if (board[i][j] == -2) {  // Unexplored cell
 //                 double risk = calculateMineProbability(i, j);
-                
-//                 // Update guess to the cell with the lowest risk
 //                 if (risk < minRisk) {
 //                     minRisk = risk;
 //                     guessX = i;
@@ -841,74 +810,76 @@
 //         }
 //     }
 
-//     // If a valid guess is found, return the uncover action for that cell
+//     // If a valid guess is found
 //     if (guessX != -1 && guessY != -1) {
 //         agentX = guessX;
 //         agentY = guessY;
 //         return {UNCOVER, guessX, guessY};
 //     }
 
-//     // If no guess is found, leave the game
+//     // If no guess is found, leave game
 //     return {LEAVE, -1, -1};
 // }
 
 // double MyAI::calculateMineProbability(int x, int y) {
 //     int flaggedCount = 0;
 //     int coveredCount = 0;
-//     int totalAdjacent = 0;
+//     int uncoveredCount = 0;
 //     int adjacentCells[8][2] = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
-//     // Iterate through adjacent cells
 //     for (int k = 0; k < 8; ++k) {
 //         int adjX = x + adjacentCells[k][0];
 //         int adjY = y + adjacentCells[k][1];
 
 //         if (isValidCell(adjX, adjY)) {
-//             ++totalAdjacent;
-//             if (board[adjX][adjY] == -1) {  // Flagged mine
+//             if (board[adjX][adjY] == -1) {  // Flagged cell
 //                 ++flaggedCount;
-//             }
-//             if (board[adjX][adjY] == -2) {  // Covered cell
+//             } else if (board[adjX][adjY] == -2) {  // Covered cell
 //                 ++coveredCount;
+//             } else {  // Uncovered cell with a number
+//                 ++uncoveredCount;
 //             }
 //         }
 //     }
 
-//     // Estimate the probability of the cell being a mine
-//     double mineProbability = static_cast<double>(totalMines - flaggedCount) / coveredCount;
-    
-//     // If there are no covered cells, assume the cell has zero risk
-//     return (coveredCount == 0) ? 0 : mineProbability;
+//     double mineProbability = 1.0;
+//     if (coveredCount > 0) {
+//         // Adjust the probability based on uncovered and flagged cells
+//         mineProbability = static_cast<double>(totalMines - flaggedCount) / coveredCount;
+
+//         // Further refine probability considering uncovered cells
+//         for (int k = 0; k < 8; ++k) {
+//             int adjX = x + adjacentCells[k][0];
+//             int adjY = y + adjacentCells[k][1];
+
+//             if (isValidCell(adjX, adjY) && board[adjX][adjY] >= 0) {  // Uncovered cell with a number
+//                 int numAdjacentMines = board[adjX][adjY];
+//                 int numAdjacentFlags = 0;
+//                 int numAdjacentCovered = 0;
+
+//                 for (int l = 0; l < 8; ++l) {
+//                     int neighborX = adjX + adjacentCells[l][0];
+//                     int neighborY = adjY + adjacentCells[l][1];
+
+//                     if (isValidCell(neighborX, neighborY)) {
+//                         if (board[neighborX][neighborY] == -1) {
+//                             ++numAdjacentFlags;
+//                         } else if (board[neighborX][neighborY] == -2) {
+//                             ++numAdjacentCovered;
+//                         }
+//                     }
+//                 }
+
+//                 if (numAdjacentCovered > 0) {
+//                     double localRisk = static_cast<double>(numAdjacentMines - numAdjacentFlags) / numAdjacentCovered;
+//                     mineProbability = std::min(mineProbability, localRisk);
+//                 }
+//             }
+//         }
+//     }
+
+//     return mineProbability;
 // }
-
-// bool MyAI::isValidCell(int x, int y) {
-//     return (x >= 0 && x < rowDimension && y >= 0 && y < colDimension);
-// }
-
-// // double MyAI::calculateMineProbability(int x, int y) {
-// //     int mineCount = 0; // # of potential mines
-// //     int unknownCount = 0; // # of unknown cells
-
-// //     // Loop through adjacent cells to count mines and unknowns 
-// //     for (int i = -1; i <= 1; ++i) {
-// //         for (int j = -1; j <= 1; ++j) {
-// //             int adjX = x + i;
-// //             int adjY = y + j;
-
-// // 			//bound check - calculate mine and unkown counts 
-// //             if (adjX >= 0 && adjX < rowDimension && adjY >= 0 && adjY < colDimension) {
-// //                 if (board[adjX][adjY] > 0) { 
-// //                     mineCount += board[adjX][adjY];
-// //                 } else if (board[adjX][adjY] == -2) { 
-// //                     unknownCount++;
-// //                 }
-// //             }
-// //         }
-// //     }
-// // 	//probablity of a cell being a mine 
-// //     return (double)mineCount / unknownCount;
-// // }
-
 
 // // Returns whether the cell is uncovered or not 
 // bool MyAI::isUncovered(int number) {
@@ -934,13 +905,7 @@
 // 		}
 // 		std::cout << std::endl;
 // 	}
-// }
-
-// // ======================================================================
-// // YOUR CODE ENDS
-// // ======================================================================
-
-
+//  }
 
 
 // ======================================================================
@@ -1731,17 +1696,20 @@ Agent::Action MyAI::uncoverRemainingCells() {
 	}
 	return {LEAVE, -1, -1};
 }
+	bool MyAI::isValidCell(int x, int y){
+    return (x >= 0 && x < rowDimension && y >= 0 && y < colDimension);
+	}
+
 
 Agent::Action MyAI::educatedGuess() {
     double minRisk = 1.0;
     int guessX = -1, guessY = -1;
 
-    // find cell with the minimum mine prob
+    // Find cell with the min mine prob
     for (int i = 0; i < rowDimension; ++i) {
         for (int j = 0; j < colDimension; ++j) {
-            if (board[i][j] == -2) { 
+            if (board[i][j] == -2) {  
                 double risk = calculateMineProbability(i, j);
-                // update guess -> cell with the lowest risk
                 if (risk < minRisk) {
                     minRisk = risk;
                     guessX = i;
@@ -1750,20 +1718,22 @@ Agent::Action MyAI::educatedGuess() {
             }
         }
     }
+
     // If valid guess is found
     if (guessX != -1 && guessY != -1) {
         agentX = guessX;
         agentY = guessY;
         return {UNCOVER, guessX, guessY};
     }
+
     // If no guess is found, leave game
     return {LEAVE, -1, -1};
 }
-//New calcMineProb function - testing 
+
 double MyAI::calculateMineProbability(int x, int y) {
     int flaggedCount = 0;
     int coveredCount = 0;
-    int totalAdjacent = 0;
+    int uncoveredCount = 0;
     int adjacentCells[8][2] = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
     for (int k = 0; k < 8; ++k) {
@@ -1771,24 +1741,53 @@ double MyAI::calculateMineProbability(int x, int y) {
         int adjY = y + adjacentCells[k][1];
 
         if (isValidCell(adjX, adjY)) {
-            ++totalAdjacent;
             if (board[adjX][adjY] == -1) {  
                 ++flaggedCount;
-            }
-            if (board[adjX][adjY] == -2) {  
+            } else if (board[adjX][adjY] == -2) { 
                 ++coveredCount;
+            } else { 
+                ++uncoveredCount;
             }
         }
     }
-    // Estimate the prob of the cell being a mine
-    double mineProbability = static_cast<double>(totalMines - flaggedCount) / coveredCount;
-    // If no covered cells, assume the cell has zero risk
-    return (coveredCount == 0) ? 0 : mineProbability;
+
+    double mineProbability = 1.0;
+    if (coveredCount > 0) {
+        // Adjust probability( using uncovered and flagged cells)
+        mineProbability = static_cast<double>(totalMines - flaggedCount) / coveredCount;
+
+        for (int k = 0; k < 8; ++k) {
+            int adjX = x + adjacentCells[k][0];
+            int adjY = y + adjacentCells[k][1];
+
+            if (isValidCell(adjX, adjY) && board[adjX][adjY] >= 0) {  
+                int numAdjacentMines = board[adjX][adjY];
+                int numAdjacentFlags = 0;
+                int numAdjacentCovered = 0;
+
+                for (int l = 0; l < 8; ++l) {
+                    int neighborX = adjX + adjacentCells[l][0];
+                    int neighborY = adjY + adjacentCells[l][1];
+
+                    if (isValidCell(neighborX, neighborY)) {
+                        if (board[neighborX][neighborY] == -1) {
+                            ++numAdjacentFlags;
+                        } else if (board[neighborX][neighborY] == -2) {
+                            ++numAdjacentCovered;
+                        }
+                    }
+                }
+                if (numAdjacentCovered > 0) {
+                    double localRisk = static_cast<double>(numAdjacentMines - numAdjacentFlags) / numAdjacentCovered;
+                    mineProbability = min(mineProbability, localRisk);
+                }
+            }
+        }
+    }
+
+    return mineProbability;
 }
-//helper function
-bool MyAI::isValidCell(int x, int y) {
-    return (x >= 0 && x < rowDimension && y >= 0 && y < colDimension);
-}
+
 // Returns whether the cell is uncovered or not 
 bool MyAI::isUncovered(int number) {
 	if (number == -1 || number == -2 || number == -3) {
@@ -1814,7 +1813,7 @@ void MyAI::printBoard() {
 		std::cout << std::endl;
 	}
 }
-
 // ======================================================================
+
 // YOUR CODE ENDS
 // ======================================================================

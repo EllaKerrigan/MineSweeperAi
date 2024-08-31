@@ -66,6 +66,7 @@ public:
 	bool isUncovered(int number);
 	bool isValidCell(int x, int y);
 	void printBoard();
+   
 	
     // ======================================================================
     // YOUR CODE ENDS
@@ -73,3 +74,4 @@ public:
 };
 
 #endif //MINE_SWEEPER_CPP_SHELL_MYAI_HPP
+

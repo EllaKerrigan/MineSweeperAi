@@ -120,7 +120,10 @@ Agent::Action MyAI::getAction( int number )
 		Action uncoverRemaining = uncoverRemainingCells();
 		return uncoverRemaining;
 	}
-
+	Action cspAction = CSPMove();
+if (cspAction.action != LEAVE) {
+    return cspAction;
+}
 	Action guessAction = educatedGuess();
 	if(guessAction.action != LEAVE){
 		return guessAction;
@@ -888,6 +891,59 @@ bool MyAI::isUncovered(int number) {
 	return true;
 }
 
+Agent::Action MyAI::CSPMove() {
+    set<pair<int, int>> safeMoves;
+    set<pair<int, int>> potentialMines;
+
+    // find safe moves
+    for (int i = 0; i < rowDimension; ++i) {
+        for (int j = 0; j < colDimension; ++j) {
+            if (board[i][j] >= 0) { 
+                int minesAround = 0;
+                int unknownCellsAround = 0;
+                vector<pair<int, int>> unknownCells;
+
+                // Check adjacent cells
+                for (int dx = -1; dx <= 1; ++dx) {
+                    for (int dy = -1; dy <= 1; ++dy) {
+                        int nx = i + dx;
+                        int ny = j + dy;
+
+                        if (nx >= 0 && nx < rowDimension && ny >= 0 && ny < colDimension) {
+                            if (board[nx][ny] == -1) {
+                                minesAround++;
+                            } else if (board[nx][ny] == -2) {
+                                unknownCellsAround++;
+                                unknownCells.push_back({nx, ny});
+                            }
+                        }
+                    }
+                }
+
+                // If # of mines around equals the clue, we know that all other unknown cells are safe
+                if (minesAround == board[i][j]) {
+                    safeMoves.insert(unknownCells.begin(), unknownCells.end());
+                }
+
+                // However if the # of unknown cells around equals the remaining mines, they are probably mines
+                if (unknownCellsAround == board[i][j] - minesAround) {
+                    potentialMines.insert(unknownCells.begin(), unknownCells.end());
+                }
+            }
+        }
+    }
+
+    // Make a safe move(if possible)
+    if (!safeMoves.empty()) {
+        auto it = safeMoves.begin();
+        agentX = it->first;
+        agentY = it->second;
+        return {UNCOVER, agentX, agentY};
+    }
+
+    // If no safe move is found, perform a random guess
+    return educatedGuess();
+}
 void MyAI::printBoard() {
 	std::cout << "Board within the function" << std::endl;
 	for (int i = 0; i < rowDimension; ++i) {

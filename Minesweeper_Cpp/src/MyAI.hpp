@@ -52,11 +52,13 @@ public:
 	Action uncoverAdjacentZero();
 	Action flagAdjacentOne();
 	std::vector<int> getAdjacentCells(int x, int y);
+	std::vector<std::pair<int, int>> safeMoves;
 	Action uncoverRemainingCells();
 	Action checkOneOneEdgePattern();
 	Action educatedGuess();
 	Action handle121Pattern();
 	Action handle1221Pattern();
+	Action CSPMove();
 	Action handle11Pattern();
 	Action handle12PlusPattern();
 	Action handle11PlusPattern();

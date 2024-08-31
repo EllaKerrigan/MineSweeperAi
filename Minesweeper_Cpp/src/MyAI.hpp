@@ -66,6 +66,7 @@ public:
 	bool isUncovered(int number);
 	bool isValidCell(int x, int y);
 	void printBoard();
+   
 	
     // ======================================================================
     // YOUR CODE ENDS
